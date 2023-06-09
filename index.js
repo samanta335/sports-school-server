@@ -51,6 +51,7 @@ async function run() {
     const instructorCollection = client
       .db("summerCamp")
       .collection("instructors");
+    const myClassCollection = client.db("summerCamp").collection("myClass");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -62,6 +63,11 @@ async function run() {
 
     app.get("/users", verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/myClass", async (req, res) => {
+      const body = req.body;
+      const result = await myClassCollection.insertOne(body);
       res.send(result);
     });
 
