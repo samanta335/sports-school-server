@@ -70,9 +70,55 @@ async function run() {
       const result = await myClassCollection.insertOne(body);
       res.send(result);
     });
-
+    app.get("/myClass/:email", async (req, res) => {
+      // console.log(req.params.name);
+      const result = await myClassCollection
+        .find({ email: req.params.email })
+        .toArray();
+      res.send(result);
+    });
     app.get("/myClass", async (req, res) => {
       const result = await myClassCollection.find().toArray();
+      res.send(result);
+    });
+    // app.post("/myClass/feedback/:id", async (req, res) => {
+    //   const id = req.params.id;
+
+    //   const filter = { _id: new ObjectId(id) };
+
+    //   const result = await feedbackCollection.insertOne(filter);
+    //   res.send(result);
+    // });
+    // app.get("/feedback", async (req, res) => {
+    //   const result = await feedbackCollection.find().toArray();
+    //   res.send(result);
+    // });
+
+    app.patch("/myClass/approve/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "approved",
+        },
+      };
+
+      const result = await myClassCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    app.patch("/myClass/deny/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "denied",
+        },
+      };
+
+      const result = await myClassCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
