@@ -52,7 +52,7 @@ async function run() {
       .db("summerCamp")
       .collection("instructors");
     const myClassCollection = client.db("summerCamp").collection("myClass");
-
+    const selectCollection = client.db("summerCamp").collection("selectClass");
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -71,7 +71,6 @@ async function run() {
       res.send(result);
     });
     app.get("/myClass/:email", async (req, res) => {
-      // console.log(req.params.name);
       const result = await myClassCollection
         .find({ email: req.params.email })
         .toArray();
@@ -81,18 +80,23 @@ async function run() {
       const result = await myClassCollection.find().toArray();
       res.send(result);
     });
-    // app.post("/myClass/feedback/:id", async (req, res) => {
-    //   const id = req.params.id;
+    app.post("/selectClass", async (req, res) => {
+      const select = req.body;
+      const result = await selectCollection.insertOne(select);
+      res.send(result);
+    });
+    app.get("/selectClass", async (req, res) => {
+      const select = req.body;
+      const result = await selectCollection.find().toArray();
+      res.send(result);
+    });
 
-    //   const filter = { _id: new ObjectId(id) };
-
-    //   const result = await feedbackCollection.insertOne(filter);
-    //   res.send(result);
-    // });
-    // app.get("/feedback", async (req, res) => {
-    //   const result = await feedbackCollection.find().toArray();
-    //   res.send(result);
-    // });
+    app.delete("/selectClass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectCollection.deleteOne(query);
+      res.send(result);
+    });
 
     app.patch("/myClass/approve/:id", async (req, res) => {
       const id = req.params.id;
