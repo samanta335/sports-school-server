@@ -126,9 +126,15 @@ async function run() {
       const query = {
         _id: { $in: payment.classItems.map((id) => new ObjectId(id)) },
       };
+      const updateDoc = {
+        $set: {
+          seat: -1,
+          enroll: 1,
+        },
+      };
       const deleteResult = await selectCollection.deleteMany(query);
 
-      res.send({ insertResult, deleteResult });
+      res.send({ insertResult, deleteResult, updateDoc });
     });
     app.get("/payments/:email", async (req, res) => {
       const result = await paymentCollection
