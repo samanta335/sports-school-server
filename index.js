@@ -3,7 +3,7 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 require("dotenv").config();
-// const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
@@ -53,6 +53,8 @@ async function run() {
       .collection("instructors");
     const myClassCollection = client.db("summerCamp").collection("myClass");
     const selectCollection = client.db("summerCamp").collection("selectClass");
+    const paymentCollection = client.db("summerCamp").collection("payments");
+
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -65,6 +67,7 @@ async function run() {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
+
     app.post("/myClass", async (req, res) => {
       const body = req.body;
       const result = await myClassCollection.insertOne(body);
@@ -85,9 +88,10 @@ async function run() {
       const result = await selectCollection.insertOne(select);
       res.send(result);
     });
-    app.get("/selectClass", async (req, res) => {
-      const select = req.body;
-      const result = await selectCollection.find().toArray();
+    app.get("/selectClass/:email", async (req, res) => {
+      const result = await selectCollection
+        .find({ email: req.params.email })
+        .toArray();
       res.send(result);
     });
 
@@ -95,6 +99,41 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      if (amount < 1) {
+        return res.status(400).send({ error: true, message: "invalid price" });
+      }
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+
+      const query = {
+        _id: { $in: payment.classItems.map((id) => new ObjectId(id)) },
+      };
+      const deleteResult = await selectCollection.deleteMany(query);
+
+      res.send({ insertResult, deleteResult });
+    });
+    app.get("/payments/:email", async (req, res) => {
+      const result = await paymentCollection
+        .find({ email: req.params.email })
+        .toArray();
       res.send(result);
     });
 
