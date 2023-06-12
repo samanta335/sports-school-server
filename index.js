@@ -54,6 +54,9 @@ async function run() {
     const myClassCollection = client.db("summerCamp").collection("myClass");
     const selectCollection = client.db("summerCamp").collection("selectClass");
     const paymentCollection = client.db("summerCamp").collection("payments");
+    const popularClassCollection = client
+      .db("summerCamp")
+      .collection("popularClass");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -240,6 +243,11 @@ async function run() {
 
     app.get("/reviews", async (req, res) => {
       const result = await reviewCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/popularClass", async (req, res) => {
+      const result = await popularClassCollection.find().toArray();
       res.send(result);
     });
 
